@@ -1,0 +1,145 @@
+name: Build ARAEMKA PDF
+
+# Compila ARAEMKA PDF para Windows y macOS usando PyInstaller.
+# Se dispara:
+#   - en cada push a main,
+#   - al crear un tag vX.Y.Z (sube además un Release con el .exe),
+#   - manualmente desde la pestaña "Actions".
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write    # necesario para subir artefactos a un Release
+
+jobs:
+  build-windows:
+    name: Compilar .exe (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller==6.20.0
+
+      - name: Ejecutar tests de lógica
+        run: python -X utf8 tests_organizador.py
+
+      - name: Compilar con PyInstaller
+        run: |
+          pyinstaller --noconfirm --clean ARAEMKA-PDF.spec
+
+      - name: Verificar que se generó el .exe
+        shell: pwsh
+        run: |
+          if (-Not (Test-Path "dist/ARAEMKA-PDF.exe")) {
+            Write-Error "No se generó dist/ARAEMKA-PDF.exe"
+            exit 1
+          }
+          $size = (Get-Item "dist/ARAEMKA-PDF.exe").Length / 1MB
+          Write-Host ("Tamaño del .exe: {0:N2} MB" -f $size)
+
+      - name: Preparar paquete portable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path release/windows -Force | Out-Null
+          Copy-Item dist/ARAEMKA-PDF.exe release/windows/
+          Copy-Item LICENSE, README.md, AVISO-LEGAL.md, CODIGO-FUENTE.md, THIRD-PARTY-NOTICES.md, TRADEMARKS.md release/windows/
+          Compress-Archive -Path release/windows/* -DestinationPath "release/ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip"
+          $zip = "ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip"
+          $hash = (Get-FileHash -Algorithm SHA256 "release/$zip").Hash.ToLower()
+          "$hash  $zip" | Out-File -Encoding ascii "release/$zip.sha256.txt"
+
+      - name: Subir artefacto (.exe portable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARAEMKA-PDF-windows-portable
+          path: |
+            release/ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip
+            release/ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip.sha256.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publicar en Release (sólo en tags vX.Y.Z)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip
+            release/ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip.sha256.txt
+          generate_release_notes: true
+
+  # ------------------------------------------------------------------
+  # Build opcional para macOS (útil para distribuir un .app firmado).
+  # No es imprescindible: en desarrollo se puede generar localmente.
+  # ------------------------------------------------------------------
+  build-macos:
+    name: Compilar .app (macOS)
+    runs-on: macos-latest
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller==6.20.0
+
+      - name: Ejecutar tests de lógica
+        run: python -X utf8 tests_organizador.py
+
+      - name: Compilar con PyInstaller
+        run: pyinstaller --noconfirm --clean ARAEMKA-PDF.spec
+
+      - name: Empaquetar .app en zip
+        run: |
+          mkdir -p release/macos
+          cp -R "dist/ARAEMKA PDF.app" release/macos/
+          cp LICENSE README.md AVISO-LEGAL.md CODIGO-FUENTE.md THIRD-PARTY-NOTICES.md TRADEMARKS.md release/macos/
+          cd release/macos
+          zip -r "../ARAEMKA-PDF-macos-${GITHUB_REF_NAME}.zip" .
+          cd ..
+          shasum -a 256 "ARAEMKA-PDF-macos-${GITHUB_REF_NAME}.zip" > "ARAEMKA-PDF-macos-${GITHUB_REF_NAME}.zip.sha256.txt"
+
+      - name: Subir artefacto (.app)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ARAEMKA-PDF-macos
+          path: |
+            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip
+            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip.sha256.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publicar en Release (sólo en tags vX.Y.Z)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip
+            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip.sha256.txt

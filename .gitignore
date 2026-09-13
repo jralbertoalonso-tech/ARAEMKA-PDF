@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+
+# PyInstaller
+build/
+dist/
+# PyInstaller crea .spec auto-generados; el nuestro sí va versionado.
+*.spec
+!ARAEMKA-PDF.spec
+release/
+
+# Configuración local de Claude Code
+.claude/
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+
+# Resultados de prueba
+salida/

@@ -1,0 +1,9 @@
+# Dependencias de ejecución de ARAEMKA PDF.
+# Versiones probadas con Python 3.11 y 3.12 en macOS y Windows.
+PyMuPDF==1.28.2
+Pillow==12.3.0
+tkinterdnd2==0.6.3
+# Motor PDF -> Word (pestaña "PDF a Word"). Arrastra consigo numpy,
+# opencv-python-headless, python-docx y fonttools.
+pdf2docx==0.5.13
+python-docx==1.2.0
