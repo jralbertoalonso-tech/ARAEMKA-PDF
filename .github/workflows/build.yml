@@ -64,7 +64,8 @@ jobs:
           Compress-Archive -Path release/windows/* -DestinationPath "release/ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip"
           $zip = "ARAEMKA-PDF-windows-x64-${{ github.ref_name }}.zip"
           $hash = (Get-FileHash -Algorithm SHA256 "release/$zip").Hash.ToLower()
-          "$hash  $zip" | Out-File -Encoding ascii "release/$zip.sha256.txt"
+          # LF explícito: permite verificar el archivo también con shasum en macOS/Linux.
+          [System.IO.File]::WriteAllText("release/$zip.sha256.txt", "$hash  $zip`n", [System.Text.Encoding]::ASCII)
 
       - name: Subir artefacto (.exe portable)
         uses: actions/upload-artifact@v4
