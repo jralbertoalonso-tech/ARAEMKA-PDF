@@ -16,9 +16,9 @@ Comprimir · Unir · Dividir · Reordenar · Imágenes a PDF · PDF a Word · Li
 
 ## Qué hace
 
-ARAEMKA PDF es una aplicación de escritorio para Windows 10/11 y macOS 11 o
-posterior. Trabaja con los archivos en el propio equipo, sin cuentas, sin
-telemetría y sin enviarlos a servicios externos.
+ARAEMKA PDF es una aplicación de escritorio para Windows 10/11 (x64) y macOS
+11 o posterior en equipos Apple Silicon (arm64). Trabaja con los archivos en el
+propio equipo, sin cuentas, sin telemetría y sin enviarlos a servicios externos.
 
 - **Comprime PDF** por lotes, con tres niveles de calidad y escala de grises opcional.
 - **Convierte imágenes a PDF** individual o multipágina.

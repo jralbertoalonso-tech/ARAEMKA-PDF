@@ -115,7 +115,9 @@ jobs:
         run: python -X utf8 tests_organizador.py
 
       - name: Compilar con PyInstaller
-        run: pyinstaller --noconfirm --clean ARAEMKA-PDF.spec
+        run: |
+          test "$(uname -m)" = "arm64"
+          pyinstaller --noconfirm --clean ARAEMKA-PDF.spec
 
       - name: Empaquetar .app en zip
         run: |
@@ -123,17 +125,17 @@ jobs:
           cp -R "dist/ARAEMKA PDF.app" release/macos/
           cp LICENSE README.md AVISO-LEGAL.md CODIGO-FUENTE.md THIRD-PARTY-NOTICES.md TRADEMARKS.md release/macos/
           cd release/macos
-          zip -r "../ARAEMKA-PDF-macos-${GITHUB_REF_NAME}.zip" .
+          zip -r "../ARAEMKA-PDF-macos-arm64-${GITHUB_REF_NAME}.zip" .
           cd ..
-          shasum -a 256 "ARAEMKA-PDF-macos-${GITHUB_REF_NAME}.zip" > "ARAEMKA-PDF-macos-${GITHUB_REF_NAME}.zip.sha256.txt"
+          shasum -a 256 "ARAEMKA-PDF-macos-arm64-${GITHUB_REF_NAME}.zip" > "ARAEMKA-PDF-macos-arm64-${GITHUB_REF_NAME}.zip.sha256.txt"
 
       - name: Subir artefacto (.app)
         uses: actions/upload-artifact@v4
         with:
           name: ARAEMKA-PDF-macos
           path: |
-            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip
-            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip.sha256.txt
+            release/ARAEMKA-PDF-macos-arm64-${{ github.ref_name }}.zip
+            release/ARAEMKA-PDF-macos-arm64-${{ github.ref_name }}.zip.sha256.txt
           if-no-files-found: error
           retention-days: 30
 
@@ -142,5 +144,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip
-            release/ARAEMKA-PDF-macos-${{ github.ref_name }}.zip.sha256.txt
+            release/ARAEMKA-PDF-macos-arm64-${{ github.ref_name }}.zip
+            release/ARAEMKA-PDF-macos-arm64-${{ github.ref_name }}.zip.sha256.txt
