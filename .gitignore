@@ -27,3 +27,6 @@ release/
 
 # Resultados de prueba
 salida/
+
+# Copias históricas locales de identidad visual
+recursos/archivo-*/
